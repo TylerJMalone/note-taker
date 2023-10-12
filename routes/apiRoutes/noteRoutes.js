@@ -1,20 +1,25 @@
 const router = require('express').Router();
 const { v4: uuidv4 } = require('uuid');
 const { notes } = require('../../db/db.json');
-const { createNewNote, deleteNote, findNoteById, editNote } = require('../../lib/notes');
+const { readFromFile, writeToFile, readAndAppend } = require('../../lib/fsUtils');
 
 router.get('/notes', (req, res) => {
-    res.json(notes);
+    readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)))
 });
 
 router.post('/notes', (req, res) => {
-    if (!req.body.id) { 
-        req.body.id = uuidv4();
-        createNewNote(req.body, notes);
+    const { title, text } = req.body;
+    if (req.body) {
+        const newNote = {
+            title,
+            text,
+            id: uuidv4(),
+        };
+
+        readAndAppend(newNote, './db/db.json');
     } else {
-        editNote(req.body, notes);
+        res.json('Error in posting feedback');
     }
-    res.json(notes);
 });
 
 router.delete('/notes/:id', (req, res) => {
